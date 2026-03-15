@@ -15,7 +15,7 @@ public class CacheAsideProductController {
 
     private final CacheAsideProductService service;
 
-    @PostMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse response = service.getById(id);
         return ResponseEntity.ok(response);

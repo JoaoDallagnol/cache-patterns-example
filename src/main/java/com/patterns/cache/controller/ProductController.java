@@ -26,25 +26,7 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/products/{id}/write-behind")
-    public ResponseEntity<ProductResponse> updateProductWriteBehind(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request) {
-        ProductResponse response = productService.update(id, request);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
-    }
 
-    @GetMapping("/products/{id}/sync-status")
-    public ResponseEntity<SyncStatusResponse> getProductSyncStatus(@PathVariable Long id) {
-        productService.getById(id);
-        SyncStatusResponse response = new SyncStatusResponse(
-                id,
-                "SYNCED",
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-        return ResponseEntity.ok(response);
-    }
 
     @DeleteMapping("/cache")
     public ResponseEntity<Void> flushCache() {
