@@ -13,10 +13,9 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class CacheManagementService {
 
     private final ProductRepository productRepository;
-
 
     @Transactional
     public void delete(Long id) {
