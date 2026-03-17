@@ -1,6 +1,7 @@
 package com.patterns.cache.service;
 
 import com.patterns.cache.dto.ProductResponse;
+import com.patterns.cache.mapper.ProductMapper;
 import com.patterns.cache.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.List;
 public class CacheAsideProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapper mapper;
 
     public ProductResponse getById(Long id) {
         // try get from cache
