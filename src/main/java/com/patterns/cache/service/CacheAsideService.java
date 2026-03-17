@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CacheAsideProductService {
+public class CacheAsideService {
 
     private final ProductRepository repository;
     private final ProductCacheRepository cacheRepository;

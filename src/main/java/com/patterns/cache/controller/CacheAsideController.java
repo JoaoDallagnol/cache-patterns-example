@@ -1,7 +1,7 @@
 package com.patterns.cache.controller;
 
 import com.patterns.cache.dto.ProductResponse;
-import com.patterns.cache.service.CacheAsideProductService;
+import com.patterns.cache.service.CacheAsideService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +11,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/product")
 @RequiredArgsConstructor
-public class CacheAsideProductController {
+public class CacheAsideController {
 
-    private final CacheAsideProductService service;
+    private final CacheAsideService service;
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {

@@ -1,7 +1,7 @@
 package com.patterns.cache.controller;
 
 import com.patterns.cache.dto.ProductResponse;
-import com.patterns.cache.service.ReadThroughProductService;
+import com.patterns.cache.service.ReadThroughService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
-public class ReadThroughProductController {
+public class ReadThroughController {
 
-    private final ReadThroughProductService service;
+    private final ReadThroughService service;
 
     @GetMapping("/products/{id}/read-through")
     public ResponseEntity<ProductResponse> getProductReadThrough(@PathVariable Long id) {
