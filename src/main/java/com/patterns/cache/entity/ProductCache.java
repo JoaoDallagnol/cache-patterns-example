@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.RedisHash;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@RedisHash(value = "products", timeToLive = 3600)
+@RedisHash(value = "products", timeToLive = 180)
 @Getter
 @Setter
 @AllArgsConstructor

@@ -21,7 +21,7 @@ public class WriteBackController {
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
         ProductResponse response = service.updateProductWriteBack(id, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @PostMapping("/{id}/write-back-queue")
@@ -29,6 +29,6 @@ public class WriteBackController {
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
         ProductResponse response = service.updateProductWriteBackQueue(id, request);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

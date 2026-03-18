@@ -11,7 +11,7 @@ info:
     name: Product Cache API
 
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://localhost:8080
     description: Local development server
 
 tags:
@@ -29,13 +29,12 @@ tags:
     description: >
       Every write is applied to the DB and Redis synchronously in the same operation.
       The cache is always consistent after a write. Trade-off: higher write latency.
-  - name: Write-Behind
+  - name: Write-Back/Write-Behind
     description: >
       The application writes to Redis immediately and returns.
       The DB write is deferred to a background async process.
       Lowest write latency. Trade-off: potential data loss if the app crashes before the flush.
-  - name: Cache Management
-    description: Cache eviction and flush utilities for manual testing.
+
 
 paths:
 
@@ -54,10 +53,9 @@ paths:
         The application checks Redis for the key `product:{id}`.
 
         - **HIT**: deserializes and returns the cached value. The DB is never touched.
-          Response includes header `X-Cache: HIT`.
 
-        - **MISS**: queries H2, writes the result to Redis with a 5-minute TTL,
-          then returns. Response includes header `X-Cache: MISS`.
+        - **MISS**: queries H2, writes the result to Redis with a 3-minute TTL,
+          then returns.
 
         The Redis read/write logic is written explicitly in the service layer —
         no Spring abstraction is used here. This is the key contrast with Read-Through.
@@ -67,12 +65,6 @@ paths:
       responses:
         '200':
           description: Product found
-          headers:
-            X-Cache:
-              description: Indicates whether the response was served from cache or the database.
-              schema:
-                type: string
-                enum: [HIT, MISS]
           content:
             application/json:
               schema:
@@ -88,9 +80,7 @@ paths:
         **Pattern: Write-Through**
 
         Updates the product in H2 and immediately overwrites `product:{id}` in Redis
-        within the same synchronous operation. The TTL is reset.
-
-        Also invalidates `products:all` to prevent the collection cache from serving stale data.
+        within the same synchronous operation. The TTL is reset to 3 minutes.
 
         After this call returns, any subsequent GET will find the fresh value in Redis.
         Stale reads are not possible with this pattern.
@@ -115,29 +105,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-    delete:
-      tags:
-        - Cache Management
-      summary: Delete product
-      description: >
-        Deletes the product from H2 and evicts all related cache keys.
-
-        Two keys are evicted:
-        - `product:{id}` — the individual product key
-        - `products:all` — the collection key, which would otherwise serve stale data
-
-        Implemented via `@CacheEvict` with `allEntries = false` on the individual key
-        and a manual DEL on the collection key.
-      operationId: deleteProduct
-      parameters:
-        - $ref: '#/components/parameters/ProductId'
-      responses:
-        '204':
-          description: Product deleted and cache evicted.
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /products:
+  /products/:
     get:
       tags:
         - Cache-Aside
@@ -145,23 +113,12 @@ paths:
       description: >
         **Pattern: Cache-Aside — applied to a collection**
 
-        Same Cache-Aside logic as GET /products/{id}, but the entire list is stored
-        under a single key `products:all` with a 2-minute TTL.
-
-        This endpoint exists alongside GET /products/{id} intentionally.
-        It introduces the list invalidation problem: any write operation (POST, PUT, DELETE)
-        must also evict `products:all`, or the collection will serve stale results.
-        This is one of the most common Cache-Aside mistakes in real systems.
+        Retrieves all products from the database and returns them.
+        This endpoint demonstrates how Cache-Aside can be applied to collection queries.
       operationId: listProducts
       responses:
         '200':
           description: List of all products
-          headers:
-            X-Cache:
-              description: Indicates whether the response was served from cache or the database.
-              schema:
-                type: string
-                enum: [HIT, MISS]
           content:
             application/json:
               schema:
@@ -177,9 +134,7 @@ paths:
         **Pattern: Write-Through**
 
         Inserts the product into H2 and simultaneously writes the result to Redis
-        under `product:{id}` with a 5-minute TTL, in the same synchronous operation.
-
-        Also invalidates `products:all` so the next list request reflects the new product.
+        under `product:{id}` with a 3-minute TTL, in the same synchronous operation.
 
         This is the creation counterpart to PUT /products/{id}: together they cover the full
         Write-Through lifecycle (insert and update).
@@ -240,28 +195,27 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   # -----------------------------------------------------------------------
-  # WRITE-BEHIND
+  # WRITE-BACK/WRITE-BEHIND
   # -----------------------------------------------------------------------
 
-  /products/{id}/write-behind:
+  /products/{id}/write-back:
     put:
       tags:
-        - Write-Behind
-      summary: Update product asynchronously (Write-Behind)
+        - Write-Back/Write-Behind
+      summary: Update product asynchronously (Write-Back/Write-Behind)
       description: >
-        **Pattern: Write-Behind**
+        **Pattern: Write-Back/Write-Behind**
 
         Updates Redis immediately and returns `202 Accepted` before the DB is written.
         The DB update is dispatched to a background thread via `@Async` and executes
         approximately 2 seconds after the response is returned.
 
         The 202 status code is intentional: it signals that the request was accepted
-        but persistence is not yet complete. This is the observable contract of Write-Behind.
+        but persistence is not yet complete. This is the observable contract of Write-Back/Write-Behind.
 
-        To observe the lag between cache and DB, call GET /products/{id}/sync-status
-        immediately after this endpoint and watch the status transition from
-        PENDING to SYNCED.
-      operationId: updateProductWriteBehind
+        This pattern provides the lowest write latency since the application doesn't wait
+        for the DB write to complete before responding to the client.
+      operationId: updateProductWriteBack
       parameters:
         - $ref: '#/components/parameters/ProductId'
       requestBody:
@@ -283,60 +237,44 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /products/{id}/sync-status:
-    get:
+  /products/{id}/write-back-queue:
+    post:
       tags:
-        - Write-Behind
-      summary: Check async DB flush status for a product
+        - Write-Back/Write-Behind
+      summary: Update product via queue (Write-Back/Write-Behind with Queue)
       description: >
-        **Pattern: Write-Behind — observability endpoint**
+        **Pattern: Write-Back/Write-Behind with Queue**
 
-        Returns the synchronization state between the Redis cache and the H2 database
-        for a given product, after a Write-Behind update.
+        Updates Redis immediately and enqueues the DB write operation for background processing.
+        Returns `201 Created` to indicate the resource was successfully created/updated in cache.
 
-        This endpoint exists to make the Write-Behind lag visible.
-        Without it, the async DB flush is an invisible background event.
-        With it, you can call PUT /products/{id}/write-behind, then poll this endpoint
-        and watch the status flip from PENDING to SYNCED in real time from Postman.
+        This variant uses a queue-based approach for the async DB write, providing better
+        reliability and ordering guarantees compared to simple async execution.
+        The queue ensures that writes are processed in order and can be retried on failure.
 
-        States:
-        - **PENDING**: Redis has been updated, DB write has not yet completed.
-        - **SYNCED**: DB has been updated by the background flush.
-      operationId: getProductSyncStatus
+        The 201 status code indicates that the resource was successfully created/updated
+        in the cache. The DB persistence happens asynchronously in the background.
+      operationId: updateProductWriteBackQueue
       parameters:
         - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
       responses:
-        '200':
-          description: Sync status retrieved
+        '201':
+          description: >
+            Created. Redis updated immediately. DB write is queued for background processing.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SyncStatusResponse'
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -----------------------------------------------------------------------
-  # CACHE MANAGEMENT
-  # -----------------------------------------------------------------------
-
-  /cache:
-    delete:
-      tags:
-        - Cache Management
-      summary: Flush all cache entries
-      description: >
-        Executes FLUSHDB on the Redis connection used by this application.
-        Removes all keys across all patterns.
-
-        This endpoint exists to support manual testing: when studying patterns,
-        you need to force a cache miss to observe the full request flow.
-        Calling this from Postman avoids having to switch to a Redis CLI between tests.
-
-        **Do not expose in production.**
-      operationId: flushCache
-      responses:
-        '204':
-          description: All cache entries flushed.
 
 # -----------------------------------------------------------------------
 # COMPONENTS
@@ -410,32 +348,6 @@ components:
           type: string
           format: date-time
           example: "2025-03-12T11:30:00Z"
-
-    SyncStatusResponse:
-      type: object
-      properties:
-        productId:
-          type: integer
-          format: int64
-          example: 1
-        status:
-          type: string
-          enum: [PENDING, SYNCED]
-          description: >
-            PENDING = Redis updated, DB write not yet complete.
-            SYNCED = DB has been flushed by the background thread.
-          example: PENDING
-        cachedAt:
-          type: string
-          format: date-time
-          description: Timestamp when Redis was written.
-          example: "2025-03-12T11:30:00Z"
-        persistedAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the DB was updated. Null while status is PENDING.
-          example: null
 
     ErrorResponse:
       type: object
