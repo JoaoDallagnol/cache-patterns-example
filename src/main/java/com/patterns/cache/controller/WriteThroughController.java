@@ -13,19 +13,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/products")
 @RequiredArgsConstructor
 public class WriteThroughController {
-    private final WriteThroughService writeThroughService;
+    private final WriteThroughService service;
 
     @PostMapping("/")
-    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
-        ProductResponse response = writeThroughService.create(request);
+    public ResponseEntity<ProductResponse> createProductWriteThrough(@Valid @RequestBody ProductRequest request) {
+        ProductResponse response = service.createProductWriteThrough(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(
+    public ResponseEntity<ProductResponse> updateProductWriteThrough(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
-        ProductResponse response = writeThroughService.update(id, request);
+        ProductResponse response = service.updateProductWriteThrough(id, request);
         return ResponseEntity.ok(response);
     }
 }

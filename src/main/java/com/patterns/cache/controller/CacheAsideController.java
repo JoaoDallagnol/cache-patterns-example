@@ -16,14 +16,14 @@ public class CacheAsideController {
     private final CacheAsideService service;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
-        ProductResponse response = service.getById(id);
+    public ResponseEntity<ProductResponse> getProductCacheAside(@PathVariable Long id) {
+        ProductResponse response = service.getProductCacheAside(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        List<ProductResponse> response = service.getAll();
+    public ResponseEntity<List<ProductResponse>> getAllProductsCacheAside() {
+        List<ProductResponse> response = service.getAllProductsCacheAside();
         return ResponseEntity.ok(response);
     }
 }

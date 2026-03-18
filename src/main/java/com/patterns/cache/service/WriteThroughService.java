@@ -17,14 +17,14 @@ public class WriteThroughService {
     private final ProductCacheRepository productCacheRepository;
     private final ProductMapper mapper;
 
-    public ProductResponse create(ProductRequest request) {
+    public ProductResponse createProductWriteThrough(ProductRequest request) {
         Product product = repository.save(mapper.toEntity(request));
         productCacheRepository.save(mapper.toCache(product));
 
         return mapper.toResponse(product);
     }
 
-    public ProductResponse update(Long id, ProductRequest request) {
+    public ProductResponse updateProductWriteThrough(Long id, ProductRequest request) {
         Product product = repository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
         mapper.updateEntity(request, product);
 

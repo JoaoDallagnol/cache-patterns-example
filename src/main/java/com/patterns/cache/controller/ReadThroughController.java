@@ -16,7 +16,7 @@ public class ReadThroughController {
 
     private final ReadThroughService service;
 
-    @GetMapping("/products/{id}/read-through")
+    @GetMapping("/{id}/read-through")
     public ResponseEntity<ProductResponse> getProductReadThrough(@PathVariable Long id) {
         ProductResponse response = service.getProductById(id);
         return ResponseEntity.ok(response);

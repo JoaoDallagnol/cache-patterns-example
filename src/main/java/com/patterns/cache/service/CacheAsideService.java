@@ -21,7 +21,7 @@ public class CacheAsideService {
     private final ProductCacheRepository cacheRepository;
     private final ProductMapper mapper;
 
-    public ProductResponse getById(Long id) {
+    public ProductResponse getProductCacheAside(Long id) {
         Optional<ProductCache> cached = cacheRepository.findById(id);
         if (cached.isPresent()) {
             return mapper.toResponseFromCache(cached.get());
@@ -32,7 +32,7 @@ public class CacheAsideService {
         return mapper.toResponse(product);
     }
 
-    public List<ProductResponse> getAll() {
+    public List<ProductResponse> getAllProductsCacheAside() {
         return null;
     }
 }
