@@ -27,9 +27,10 @@ public interface ProductMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntity(ProductRequest request, @MappingTarget Product product);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateCacheEntity(ProductRequest request, @MappingTarget ProductCache productCache);
+
     ProductCache toCache(Product product);
-
-    Product fromCache(ProductCache productCache);
-
-    ProductCache toCacheFromRequest(Long id, ProductRequest request);
 }
