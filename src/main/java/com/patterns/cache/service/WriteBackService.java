@@ -2,6 +2,7 @@ package com.patterns.cache.service;
 
 import com.patterns.cache.dto.ProductRequest;
 import com.patterns.cache.dto.ProductResponse;
+import com.patterns.cache.dto.WriteOperation;
 import com.patterns.cache.entity.Product;
 import com.patterns.cache.entity.ProductCache;
 import com.patterns.cache.exception.ProductNotFoundException;
@@ -19,6 +20,7 @@ public class WriteBackService {
     private final ProductRepository productRepository;
     private final ProductCacheRepository productCacheRepository;
     private final ProductMapper mapper;
+    private final WriteBackQueueService queueService;
 
     public ProductResponse updateProductWriteBack(Long id, ProductRequest request) {
         ProductCache cacheEntity = mapper.toCacheFromRequest(id, request);
@@ -29,7 +31,11 @@ public class WriteBackService {
     }
 
     public ProductResponse updateProductWriteBackQueue(Long id, ProductRequest request) {
-        return null;
+        ProductCache cacheEntity = mapper.toCacheFromRequest(id, request);
+        productCacheRepository.save(cacheEntity);
+
+        queueService.enqueue(new WriteOperation(id, request));
+        return mapper.toResponseFromCache(cacheEntity);
     }
 
 
