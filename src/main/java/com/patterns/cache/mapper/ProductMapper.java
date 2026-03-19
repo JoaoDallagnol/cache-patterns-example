@@ -30,4 +30,6 @@ public interface ProductMapper {
     ProductCache toCache(Product product);
 
     Product fromCache(ProductCache productCache);
+
+    ProductCache toCacheFromRequest(Long id, ProductRequest request);
 }

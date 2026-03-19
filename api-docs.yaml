@@ -238,7 +238,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   /products/{id}/write-back-queue:
-    post:
+    put:
       tags:
         - Write-Back/Write-Behind
       summary: Update product via queue (Write-Back/Write-Behind with Queue)
@@ -246,14 +246,14 @@ paths:
         **Pattern: Write-Back/Write-Behind with Queue**
 
         Updates Redis immediately and enqueues the DB write operation for background processing.
-        Returns `201 Created` to indicate the resource was successfully created/updated in cache.
+        Returns `202 Accepted` to indicate the request was accepted but persistence is not yet complete.
 
         This variant uses a queue-based approach for the async DB write, providing better
         reliability and ordering guarantees compared to simple async execution.
         The queue ensures that writes are processed in order and can be retried on failure.
 
-        The 201 status code indicates that the resource was successfully created/updated
-        in the cache. The DB persistence happens asynchronously in the background.
+        The 202 status code signals that the request was accepted and the cache was updated,
+        but the DB persistence happens asynchronously in the background.
       operationId: updateProductWriteBackQueue
       parameters:
         - $ref: '#/components/parameters/ProductId'
@@ -264,9 +264,9 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductRequest'
       responses:
-        '201':
+        '202':
           description: >
-            Created. Redis updated immediately. DB write is queued for background processing.
+            Accepted. Redis updated immediately. DB write is queued for background processing.
           content:
             application/json:
               schema:
