@@ -16,13 +16,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WriteThroughService {
     private final ProductRepository repository;
-    private final ProductCacheRepository productCacheRepository;
+    private final ProductCacheRepository cacheRepository;
     private final ProductMapper mapper;
 
     public ProductResponse createProductWriteThrough(ProductRequest request) {
         Product product = repository.save(mapper.toEntity(request));
         log.info("Write-Through: Product saved in DB!");
-        productCacheRepository.save(mapper.toCache(product));
+        cacheRepository.save(mapper.toCache(product));
         log.info("Write-Through: Product saved in Cache!");
         return mapper.toResponse(product);
     }
@@ -32,7 +32,7 @@ public class WriteThroughService {
         mapper.updateEntity(request, product);
         Product updated = repository.save(product);
         log.info("Write-Through: Product updated in DB!");
-        productCacheRepository.save(mapper.toCache(updated));
+        cacheRepository.save(mapper.toCache(updated));
         log.info("Write-Through: Product Updated in Cache!");
         return mapper.toResponse(updated);
     }

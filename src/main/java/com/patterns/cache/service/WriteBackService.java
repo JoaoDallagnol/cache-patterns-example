@@ -15,30 +15,30 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WriteBackService {
 
-    private final ProductCacheRepository productCacheRepository;
+    private final ProductCacheRepository cacheRepository;
     private final ProductMapper mapper;
     private final WriteBackQueueService queueService;
     private final AsyncProductService asyncProductService;
 
     public ProductResponse updateProductWriteBack(Long id, ProductRequest request) {
-        ProductCache cacheEntity = productCacheRepository.findById(id)
+        ProductCache cacheEntity = cacheRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found in cache: " + id));
 
         log.info("Write-Back: Found product in Cache!");
         mapper.updateCacheEntity(request, cacheEntity);
-        productCacheRepository.save(cacheEntity);
+        cacheRepository.save(cacheEntity);
         log.info("Write-Back: Cache Updated!");
         asyncProductService.persistAsync(id, request);
         return mapper.toResponseFromCache(cacheEntity);
     }
 
     public ProductResponse updateProductWriteBackQueue(Long id, ProductRequest request) {
-        ProductCache cacheEntity = productCacheRepository.findById(id)
+        ProductCache cacheEntity = cacheRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found in cache: " + id));
 
         log.info("Write-Back: Found Product in Cache!");
         mapper.updateCacheEntity(request, cacheEntity);
-        productCacheRepository.save(cacheEntity);
+        cacheRepository.save(cacheEntity);
         log.info("Write-Back: cache Updated!");
         queueService.enqueue(new WriteOperation(id, request));
         return mapper.toResponseFromCache(cacheEntity);

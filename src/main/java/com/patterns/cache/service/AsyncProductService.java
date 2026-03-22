@@ -15,15 +15,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AsyncProductService {
 
-    private final ProductRepository productRepository;
+    private final ProductRepository repository;
     private final ProductMapper mapper;
 
     @Async("writeBackExecutor")
     public void persistAsync(Long id, ProductRequest request) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+        Product product = repository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
         log.info("Write-Back-Async: Found product in DB, starting operation");
         mapper.updateEntity(request, product);
-        productRepository.save(product);
+        repository.save(product);
         log.info("Write-Back-Async: Product Updated");
     }
 }

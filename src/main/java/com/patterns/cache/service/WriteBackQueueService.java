@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 public class WriteBackQueueService {
 
-    private final ProductRepository productRepository;
+    private final ProductRepository repository;
     private final ProductMapper mapper;
     private final BlockingQueue<WriteOperation> queue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
@@ -59,10 +59,10 @@ public class WriteBackQueueService {
 
     private void persistToDatabase(WriteOperation operation) {
         try {
-            Product product = productRepository.findById(operation.getProductId())
+            Product product = repository.findById(operation.getProductId())
                     .orElseThrow(() -> new ProductNotFoundException(operation.getProductId()));
             mapper.updateEntity(operation.getRequest(), product);
-            productRepository.save(product);
+            repository.save(product);
             log.info("Product ID {} persisted to database", operation.getProductId());
         } catch (Exception e) {
             log.error("Error persisting product ID {}: {}", operation.getProductId(), e.getMessage());

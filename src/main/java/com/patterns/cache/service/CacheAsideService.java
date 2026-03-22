@@ -33,7 +33,7 @@ public class CacheAsideService {
         log.info("Cache-Aside: Did not found product in cache");
         Product product = repository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
         cacheRepository.save(mapper.toCache(product));
-        log.info("Cache-Aside: Returning product from the database!");
+        log.info("Cache-Aside: Product Saved in cache. Returning product from the database!");
         return mapper.toResponse(product);
     }
 

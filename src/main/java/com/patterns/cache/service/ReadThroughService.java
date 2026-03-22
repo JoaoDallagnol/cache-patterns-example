@@ -14,14 +14,14 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ReadThroughService {
 
-    private final ProductRepository productRepository;
+    private final ProductRepository repository;
     private final ProductMapper mapper;
 
     @Cacheable(value = "products", key = "#id")
     public ProductResponse getProductById(Long id) {
         log.info("Fetching product ID {} from database (cache miss)", id);
         return mapper.toResponse(
-            productRepository.findById(id)
+                repository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id))
         );
     }
