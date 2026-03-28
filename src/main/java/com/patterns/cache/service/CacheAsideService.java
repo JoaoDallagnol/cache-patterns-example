@@ -36,8 +36,4 @@ public class CacheAsideService {
         log.info("Cache-Aside: Product Saved in cache. Returning product from the database!");
         return mapper.toResponse(product);
     }
-
-    public List<ProductResponse> getAllProductsCacheAside() {
-        return null;
-    }
 }
