@@ -27,6 +27,13 @@ This project implements a Product API where each endpoint demonstrates a specifi
 - **Complexity**: Implementation difficulty
 - **Reliability**: Risk of data loss
 
+## 📚 Related Articles
+
+This project was created as a companion to the following articles:
+
+- 🇺🇸 English: [A Practical Guide to Cache Patterns](https://medium.com/@jvdallagnol2001/a-practical-guide-to-cache-patterns-use-cases-and-trade-offs-87eebdc2a6a7)
+- 🇧🇷 Portuguese (PT-BR): [Padrões de Cache: Casos de Uso e Trade-offs](https://medium.com/@jvdallagnol2001/padrões-de-cache-casos-de-uso-e-trade-offs-e535263cfbd9)
+
 ## Cache Patterns
 
 ### 1. Cache-Aside
